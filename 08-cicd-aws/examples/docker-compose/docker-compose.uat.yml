@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: myapp-uat:latest
+    container_name: myapp-uat
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=staging
+      - PORT=3000
+      - LOG_LEVEL=info
+      - ENVIRONMENT=uat
+      - DATABASE_HOST=postgres-uat
+      - REDIS_HOST=redis-uat
+      - ENABLE_METRICS=true
+    depends_on:
+      postgres-uat:
+        condition: service_healthy
+      redis-uat:
+        condition: service_started
+    networks:
+      - uat-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  postgres-uat:
+    image: postgres:15-alpine
+    container_name: postgres-uat
+    environment:
+      - POSTGRES_DB=myapp_uat
+      - POSTGRES_USER=uatuser
+      - POSTGRES_PASSWORD=uatpass123
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-uat-data:/var/lib/postgresql/data
+    networks:
+      - uat-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uatuser -d myapp_uat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  redis-uat:
+    image: redis:7-alpine
+    container_name: redis-uat
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-uat-data:/data
+    networks:
+      - uat-network
+    command: redis-server --appendonly yes
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-uat
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - uat-network
+    restart: unless-stopped
+
+volumes:
+  postgres-uat-data:
+  redis-uat-data:
+
+networks:
+  uat-network:
+    driver: bridge

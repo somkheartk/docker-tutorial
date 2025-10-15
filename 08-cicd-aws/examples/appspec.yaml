@@ -1,0 +1,25 @@
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: "TASK_DEFINITION_ARN"
+        LoadBalancerInfo:
+          ContainerName: "myapp"
+          ContainerPort: 3000
+        PlatformVersion: "LATEST"
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            Subnets:
+              - "subnet-xxxxx"
+              - "subnet-yyyyy"
+            SecurityGroups:
+              - "sg-xxxxx"
+            AssignPublicIp: "ENABLED"
+
+Hooks:
+  - BeforeInstall: "BeforeInstall"
+  - AfterInstall: "AfterInstall"
+  - AfterAllowTestTraffic: "AfterAllowTestTraffic"
+  - BeforeAllowTraffic: "BeforeAllowTraffic"
+  - AfterAllowTraffic: "AfterAllowTraffic"
