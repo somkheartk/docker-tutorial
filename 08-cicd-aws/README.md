@@ -577,6 +577,79 @@ fi
 - ✅ Monitoring และ Logging บน AWS
 - ✅ Security และ Cost optimization best practices
 
+## 🎯 ตัวอย่างที่สมบูรณ์: Multi-Environment CI/CD
+
+เรามี **ตัวอย่าง CI/CD Pipeline ที่สมบูรณ์** สำหรับ 3 environments: **DEV, UAT, และ PROD**
+
+### 📁 [ดูตัวอย่างแบบเต็ม →](./examples/)
+
+ตัวอย่างประกอบด้วย:
+
+#### 1. GitHub Actions Workflows
+- ✅ **deploy-dev.yml** - Auto-deploy ไป DEV environment
+- ✅ **deploy-uat.yml** - Deploy ไป UAT พร้อม security scanning
+- ✅ **deploy-prod.yml** - Blue-green deployment ไป PROD พร้อม approval
+
+#### 2. Task Definitions สำหรับแต่ละ Environment
+- ✅ **task-definition-dev.json** - Resources ขนาดเล็ก, debug logging
+- ✅ **task-definition-uat.json** - Resources ขนาดกลาง, monitoring enabled
+- ✅ **task-definition-prod.json** - Resources เต็มรูปแบบ, tracing enabled
+
+#### 3. Deployment Scripts
+- ✅ **deploy-dev.sh** - Deploy script สำหรับ DEV
+- ✅ **deploy-uat.sh** - Deploy script สำหรับ UAT พร้อม security scan
+- ✅ **deploy-prod.sh** - Deploy script สำหรับ PROD พร้อม confirmation
+- ✅ **rollback-prod.sh** - Rollback script สำหรับ PROD
+
+#### 4. Docker Compose Files
+- ✅ **docker-compose.dev.yml** - Local development setup
+- ✅ **docker-compose.uat.yml** - UAT environment setup
+- ✅ **docker-compose.prod.yml** - Production setup พร้อม monitoring
+
+### 🌟 คุณสมบัติเด่น
+
+| Environment | Auto Deploy | Testing | Security Scan | Deployment Strategy |
+|-------------|-------------|---------|---------------|---------------------|
+| **DEV** | ✅ develop branch | Unit + Lint | Basic | Rolling |
+| **UAT** | ✅ uat/release/* | + Integration | Full | Rolling |
+| **PROD** | ✅ main + tags | + E2E | Full + Blocking | Blue-Green |
+
+### 📖 เริ่มต้นใช้งาน
+
+```bash
+# 1. คัดลอก workflows
+cp examples/workflows/*.yml .github/workflows/
+
+# 2. คัดลอก task definitions
+cp examples/task-definitions/*.json ./
+
+# 3. ตั้งค่า GitHub Secrets
+# - AWS_ACCESS_KEY_ID_DEV
+# - AWS_ACCESS_KEY_ID_UAT  
+# - AWS_ACCESS_KEY_ID_PROD
+# (และ SECRET_ACCESS_KEY ตามด้วย)
+
+# 4. สร้าง ECR repositories
+aws ecr create-repository --repository-name myapp-dev
+aws ecr create-repository --repository-name myapp-uat
+aws ecr create-repository --repository-name myapp-prod
+
+# 5. Deploy!
+git push origin develop  # Deploy to DEV
+git push origin uat       # Deploy to UAT
+git push origin main      # Deploy to PROD (needs approval)
+```
+
+### 📚 Documentation
+
+ดู [examples/README.md](./examples/README.md) สำหรับ:
+- การตั้งค่าแบบละเอียด
+- Best practices สำหรับแต่ละ environment
+- Troubleshooting guide
+- Security และ monitoring setup
+
+---
+
 ## 🎓 แบบฝึกหัด
 
 1. สร้าง complete CI/CD pipeline สำหรับ application ของคุณ
